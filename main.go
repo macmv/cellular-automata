@@ -2,6 +2,8 @@ package main
 
 import (
   "github.com/macmv/simple-gl"
+
+  "github.com/go-gl/mathgl/mgl32"
 )
 
 func main() {
@@ -18,8 +20,13 @@ func main() {
   shader.LoadPerspective(window, 0.1, 10)
   window.Finish()
 
+  rot := mgl32.Rotate3DX(0.04).Mul3(mgl32.Rotate3DY(0.04)).Mul3(mgl32.Rotate3DZ(0.04))
+
   for !window.Closed() {
+    cube.Transform = cube.Transform.Mul4(rot.Mat4())
+
     window.Use(shader)
+    shader.LoadCamera(2, 3, -3)
     window.Render(cube)
     window.Finish()
 
