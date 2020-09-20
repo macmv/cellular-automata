@@ -20,15 +20,17 @@ type World struct {
   cube *gl.Model
   locs [][][]*point
   alive map[loc]*point
+  rule *Rule
 }
 
-func NewWorld(size int) *World {
+func NewWorld(size int, rule *Rule) *World {
   w := World{}
   w.size = size
   w.locs = [][][]*point{}
   w.alive = make(map[loc]*point)
+  w.rule = rule
 
-  scale := float32(1) / float32(size) * 2
+  scale := float32(1) / float32(size) * 3
   w.cube = gl.NewCube(scale / 2, scale / 2, scale / 2)
   for x := 0; x < size; x++ {
     slice := [][]*point{}
@@ -67,10 +69,11 @@ func (w *World) Update() {
       for z, p := range row {
         l := loc{x, y, z}
         nearby := w.find_nearby(l)
-        if p.state == 0 && (nearby == 4 || nearby == 4) {
+        alive := w.rule.Eval(p.state, nearby)
+        if p.state == 0 && alive {
           new_locs[l] = 1
           w.alive[l] = p
-        } else if p.state != 0 && (nearby < 2 || nearby > 4) {
+        } else if p.state != 0 && !alive {
           new_locs[l] = 0
           delete(w.alive, l)
         }

@@ -17,7 +17,7 @@ func main() {
   window := gl.NewWindow("CA sim", 800, 600)
   defer window.Close()
 
-  w := NewWorld(100)
+  w := NewWorld(100, nil)
 
   shader, err := gl.NewShader("vertex.glsl", "fragment.glsl")
   if err != nil {
@@ -27,7 +27,9 @@ func main() {
   shader.LoadPerspective(window, 0.1, 10)
   window.Finish()
 
-  rot := mgl32.Rotate3DY(0.01)
+  rot := mgl32.Rotate3DY(0.01).Mat4()
+
+  world_trans := rot
 
   i := 0
   step := 0
@@ -41,16 +43,12 @@ func main() {
 
     window.Use(shader)
     shader.LoadCamera(2, 3, -3)
-    for _, slice := range w.locs {
-      for _, row := range slice {
-        for _, p := range row {
-          p.trans = rot.Mat4().Mul4(p.trans)
-        }
-      }
-    }
+    world_trans = rot.Mul4(world_trans)
     for l, p := range w.alive {
-      w.cube.Transform = p.trans
-      w.cube.Color = mgl32.Vec3{float32(l.x) / 20, float32(l.y) / 20, float32(l.z) / 20}
+      w.cube.Transform = world_trans.Mul4(p.trans)
+      v := mgl32.Vec3{float32(l.x) - 50, float32(l.y) - 50, float32(l.z) - 50}
+      dist := v.Len() / 100
+      w.cube.Color = mgl32.Vec3{1 - dist, 1, 1}
       window.Render(w.cube)
     }
     window.Finish()
