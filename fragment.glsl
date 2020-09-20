@@ -1,8 +1,27 @@
 #version 330
 
-in vec3 col;
-out vec4 outputColor;
+uniform sampler3D tex;
+
+uniform mat4 projection;
+uniform mat4 camera;
+uniform mat4 model;
+
+in vec3 norm;
+in vec3 pass_color;
+in vec3 pass_pos;
+
+out vec4 output;
 
 void main() {
-  outputColor = vec4(col, 1);
+  vec3 light_pos = (model * vec4(10, 10, -10, 1)).xyz;
+  float specular_strength = 0.5;
+  float diffuse_strength = 1;
+
+  // diffuse lighting
+  vec3 to_light_vec = normalize(pass_pos - light_pos);
+  float brightness = max(dot(norm, to_light_vec), 0);
+  float diffuse = brightness * diffuse_strength;
+
+  // final color
+  output = vec4(diffuse * pass_color + vec3(0.1), 1);
 }

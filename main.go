@@ -22,7 +22,7 @@ func main() {
   size := 100
 
   survives := NewRule(6)
-  born := NewRule(6, 7, 8)
+  born := NewRule(6, 7, 8, 9, 10, 11, 12, 13, 14)
 
   w := NewWorld(
     size,
@@ -31,7 +31,7 @@ func main() {
     5,
   )
 
-  shader, err := gl.NewShader("vertex.glsl", "fragment.glsl")
+  shader, err := gl.NewShaderGeo("geometry.glsl", "vertex.glsl", "fragment.glsl")
   if err != nil {
     panic(err)
   }
