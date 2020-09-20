@@ -31,7 +31,7 @@ func NewWorld(size int, survives, born *Rule, max int) *World {
   w.locs = [][][]*point{}
   w.survives = survives
   w.born = born
-  w.max = max
+  w.max = max - 1
 
   scale := float32(1) / float32(size) * 3
   w.cube = gl.NewCube(scale / 2, scale / 2, scale / 2)
@@ -51,7 +51,7 @@ func NewWorld(size int, survives, born *Rule, max int) *World {
     w.locs = append(w.locs, slice)
   }
   // (&w).SetArea(0, 0, 0, size - 1, size - 1, size - 1, true)
-  (&w).SetArea(size / 2 - 5, size / 2 - 5, size / 2 - 5, 10, 10, 10, func() bool { return rand.Intn(10) < 9 })
+  (&w).SetArea(size / 2 - 5, size / 2 - 5, size / 2 - 5, 10, 10, 10, func() bool { return rand.Intn(10) < 1 })
   // for i := 0; i < 80000; i++ {
   //   x := rand.Intn(size - 1)
   //   y := rand.Intn(size - 1)
@@ -67,7 +67,7 @@ func (w *World) SetArea(x1, y1, z1, w1, h1, d1 int, val func() bool) {
       for z := z1; z <= z1 + d1; z++ {
         v := 0
         if val() {
-          v = w.max - 1
+          v = w.max
         }
         w.locs[x][y][z].state = v
       }
@@ -83,10 +83,10 @@ func (w *World) Update() {
         l := loc{x, y, z}
         nearby := w.find_nearby(l)
         if p.state == 0 && w.born.True(nearby) { // dead, and is born
+          new_locs[l] = w.max
+        } else if p.state == w.max && !w.survives.True(nearby) { // alive, and does not survive
           new_locs[l] = w.max - 1
-        } else if p.state == w.max - 1 && !w.survives.True(nearby) { // alive, and does not survive
-          new_locs[l] = w.max - 2
-        } else if p.state != 0 {
+        } else if p.state != 0 && p.state != w.max {
           new_locs[l] = p.state - 1
         }
       }
