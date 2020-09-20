@@ -21,14 +21,14 @@ func main() {
 
   size := 100
 
-  survives := NewRule(6, 7, 8)
+  survives := NewRule(6)
   born := NewRule(6, 7, 8)
 
   w := NewWorld(
     size,
     survives,
     born,
-    3,
+    5,
   )
 
   shader, err := gl.NewShader("vertex.glsl", "fragment.glsl")

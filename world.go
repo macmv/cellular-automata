@@ -132,11 +132,7 @@ func (w *World) TextureData() []uint8 {
         data[(x * w.size * w.size + y * w.size + z) * 4 + 0] = 0
         data[(x * w.size * w.size + y * w.size + z) * 4 + 1] = 0
         data[(x * w.size * w.size + y * w.size + z) * 4 + 2] = 255
-        var v uint8 = 0
-        if w.locs[x][y][z].state != 0 {
-          v = 255
-        }
-        data[(x * w.size * w.size + y * w.size + z) * 4 + 3] = v
+        data[(x * w.size * w.size + y * w.size + z) * 4 + 3] = uint8(w.locs[x][y][z].state)
       }
     }
   }
