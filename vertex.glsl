@@ -8,7 +8,7 @@ in vec3 vert;
 out vec3 pos;
 
 void main() {
-  pos = vert;
+  pos = (vert + 1) / 2;
   gl_Position = projection * camera * model * vec4(vert, 1);
 }
 
