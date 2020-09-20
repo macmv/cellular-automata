@@ -14,7 +14,9 @@ func main() {
   if err != nil {
     panic(err)
   }
+  window.Use(shader)
   shader.LoadPerspective(window, 0.1, 10)
+  window.Finish()
 
   for !window.Closed() {
     window.Use(shader)
