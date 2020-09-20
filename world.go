@@ -2,7 +2,6 @@ package main
 
 import (
   "math/rand"
-
   "github.com/macmv/simple-gl"
 
   "github.com/go-gl/mathgl/mgl32"
@@ -21,7 +20,6 @@ type World struct {
   size int
   cube *gl.Model
   locs [][][]*point
-  alive map[loc]*point
   survives *Rule
   born *Rule
   max int
@@ -31,7 +29,6 @@ func NewWorld(size int, survives, born *Rule, max int) *World {
   w := World{}
   w.size = size
   w.locs = [][][]*point{}
-  w.alive = make(map[loc]*point)
   w.survives = survives
   w.born = born
   w.max = max
@@ -53,30 +50,26 @@ func NewWorld(size int, survives, born *Rule, max int) *World {
     }
     w.locs = append(w.locs, slice)
   }
-  (&w).SetArea(0, 0, 0, size - 1, size - 1, size - 1, true)
-  for i := 0; i < 30000; i++ {
-    x := rand.Intn(size - 3)
-    y := rand.Intn(size - 3)
-    z := rand.Intn(size - 3)
-    (&w).SetArea(x, y, z, x + 1, y + 1, z + 1, false)
-  }
+  // (&w).SetArea(0, 0, 0, size - 1, size - 1, size - 1, true)
+  (&w).SetArea(size / 2 - 5, size / 2 - 5, size / 2 - 5, 10, 10, 10, func() bool { return rand.Intn(10) < 9 })
+  // for i := 0; i < 80000; i++ {
+  //   x := rand.Intn(size - 1)
+  //   y := rand.Intn(size - 1)
+  //   z := rand.Intn(size - 1)
+  //   (&w).SetArea(x, y, z, x + 1, y + 1, z + 1, false)
+  // }
   return &w
 }
 
-func (w *World) SetArea(x1, y1, z1, x2, y2, z2 int, val bool) {
-  v := 0
-  if val {
-    v = w.max - 1
-  }
-  for x := x1; x <= x2; x++ {
-    for y := y1; y <= y2; y++ {
-      for z := z1; z <= z2; z++ {
-        w.locs[x][y][z].state = v
-        if val {
-          w.alive[loc{x, y, z}] = w.locs[x][y][z]
-        } else {
-          delete(w.alive, loc{x, y, z})
+func (w *World) SetArea(x1, y1, z1, w1, h1, d1 int, val func() bool) {
+  for x := x1; x <= x1 + w1; x++ {
+    for y := y1; y <= y1 + h1; y++ {
+      for z := z1; z <= z1 + d1; z++ {
+        v := 0
+        if val() {
+          v = w.max - 1
         }
+        w.locs[x][y][z].state = v
       }
     }
   }
@@ -90,11 +83,11 @@ func (w *World) Update() {
         l := loc{x, y, z}
         nearby := w.find_nearby(l)
         if p.state == 0 && w.born.True(nearby) { // dead, and is born
-          w.alive[l] = p
-          new_locs[l] = w.max
-        } else if p.state == 1 && !w.survives.True(nearby) { // alive, and does not survive
-          delete(w.alive, l)
-          new_locs[l] = 0
+          new_locs[l] = w.max - 1
+        } else if p.state == w.max - 1 && !w.survives.True(nearby) { // alive, and does not survive
+          new_locs[l] = w.max - 2
+        } else if p.state != 0 {
+          new_locs[l] = p.state - 1
         }
       }
     }
@@ -129,4 +122,23 @@ func (w *World) find_nearby(l loc) int {
     }
   }
   return total
+}
+
+func (w *World) TextureData() []uint8 {
+  data := make([]uint8, w.size * w.size * w.size * 4)
+  for x := 0; x < w.size; x++ {
+    for y := 0; y < w.size; y++ {
+      for z := 0; z < w.size; z++ {
+        data[(x * w.size * w.size + y * w.size + z) * 4 + 0] = 0
+        data[(x * w.size * w.size + y * w.size + z) * 4 + 1] = 0
+        data[(x * w.size * w.size + y * w.size + z) * 4 + 2] = 255
+        var v uint8 = 0
+        if w.locs[x][y][z].state != 0 {
+          v = 255
+        }
+        data[(x * w.size * w.size + y * w.size + z) * 4 + 3] = v
+      }
+    }
+  }
+  return data
 }
