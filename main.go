@@ -1,30 +1,23 @@
 package main
 
 import (
+  "net/http"
+  _ "net/http/pprof"
   "github.com/macmv/simple-gl"
 
   "github.com/go-gl/mathgl/mgl32"
 )
 
 func main() {
+  go func() {
+    http.ListenAndServe("localhost:6060", nil)
+  }()
+
   gl.Init()
   window := gl.NewWindow("CA sim", 800, 600)
   defer window.Close()
-  cubes := []*gl.Model{}
-  amount := 8
-  scale := float32(1) / float32(amount) * 2
-  for x := 0; x < amount; x++ {
-    for y := 0; y < amount; y++ {
-      for z := 0; z < amount; z++ {
-        fx := scale * float32(x - amount / 2)
-        fy := scale * float32(y - amount / 2)
-        fz := scale * float32(z - amount / 2)
-        cube := gl.NewCube(scale / 2, scale / 2, scale / 2)
-        cube.Transform = mgl32.Translate3D(fx, fy, fz).Mul4(cube.Transform)
-        cubes = append(cubes, cube)
-      }
-    }
-  }
+
+  w := NewWorld(100)
 
   shader, err := gl.NewShader("vertex.glsl", "fragment.glsl")
   if err != nil {
@@ -36,12 +29,29 @@ func main() {
 
   rot := mgl32.Rotate3DY(0.01)
 
+  i := 0
+  step := 0
   for !window.Closed() {
+    i++
+    if i > 2 {
+      i = 0
+      w.Update()
+      step++
+    }
+
     window.Use(shader)
     shader.LoadCamera(2, 3, -3)
-    for _, c := range cubes {
-      c.Transform = rot.Mat4().Mul4(c.Transform)
-      window.Render(c)
+    for _, slice := range w.locs {
+      for _, row := range slice {
+        for _, p := range row {
+          p.trans = rot.Mat4().Mul4(p.trans)
+        }
+      }
+    }
+    for l, p := range w.alive {
+      w.cube.Transform = p.trans
+      w.cube.Color = mgl32.Vec3{float32(l.x) / 20, float32(l.y) / 20, float32(l.z) / 20}
+      window.Render(w.cube)
     }
     window.Finish()
 

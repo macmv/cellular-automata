@@ -3,12 +3,13 @@
 uniform mat4 projection;
 uniform mat4 camera;
 uniform mat4 model;
+uniform vec3 color;
 
 in vec3 vert;
-out vec3 pos;
+out vec3 col;
 
 void main() {
-  pos = (vert + 1) / 2;
+  col = color;
   gl_Position = projection * camera * model * vec4(vert, 1);
 }
 
