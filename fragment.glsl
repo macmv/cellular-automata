@@ -10,7 +10,7 @@ in vec3 norm;
 in vec3 pass_color;
 in vec3 pass_pos;
 
-out vec4 output;
+out vec4 output_color;
 
 void main() {
   vec3 light_pos = (model * vec4(10, 10, -10, 1)).xyz;
@@ -23,5 +23,5 @@ void main() {
   float diffuse = brightness * diffuse_strength;
 
   // final color
-  output = vec4(diffuse * pass_color + vec3(0.1), 1);
+  output_color = vec4(diffuse * pass_color + vec3(0.1), 1);
 }
