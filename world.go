@@ -1,6 +1,8 @@
 package main
 
 import (
+  "math/rand"
+
   "github.com/macmv/simple-gl"
 
   "github.com/go-gl/mathgl/mgl32"
@@ -20,15 +22,19 @@ type World struct {
   cube *gl.Model
   locs [][][]*point
   alive map[loc]*point
-  rule *Rule
+  survives *Rule
+  born *Rule
+  max int
 }
 
-func NewWorld(size int, rule *Rule) *World {
+func NewWorld(size int, survives, born *Rule, max int) *World {
   w := World{}
   w.size = size
   w.locs = [][][]*point{}
   w.alive = make(map[loc]*point)
-  w.rule = rule
+  w.survives = survives
+  w.born = born
+  w.max = max
 
   scale := float32(1) / float32(size) * 3
   w.cube = gl.NewCube(scale / 2, scale / 2, scale / 2)
@@ -47,19 +53,33 @@ func NewWorld(size int, rule *Rule) *World {
     }
     w.locs = append(w.locs, slice)
   }
-  a := loc{size / 2, size / 2, size / 2}
-  b := loc{size / 2 + 1, size / 2, size / 2}
-  c := loc{size / 2, size / 2 + 1, size / 2}
-  d := loc{size / 2 + 1, size / 2 + 1, size / 2}
-  w.locs[size / 2][size / 2][size / 2].state = 1
-  w.locs[size / 2 + 1][size / 2][size / 2].state = 1
-  w.locs[size / 2][size / 2 + 1][size / 2].state = 1
-  w.locs[size / 2 + 1][size / 2 + 1][size / 2].state = 1
-  w.alive[a] = w.locs[size / 2][size / 2][size / 2]
-  w.alive[b] = w.locs[size / 2 + 1][size / 2][size / 2]
-  w.alive[c] = w.locs[size / 2][size / 2 + 1][size / 2]
-  w.alive[d] = w.locs[size / 2 + 1][size / 2 + 1][size / 2]
+  (&w).SetArea(0, 0, 0, size - 1, size - 1, size - 1, true)
+  for i := 0; i < 30000; i++ {
+    x := rand.Intn(size - 3)
+    y := rand.Intn(size - 3)
+    z := rand.Intn(size - 3)
+    (&w).SetArea(x, y, z, x + 1, y + 1, z + 1, false)
+  }
   return &w
+}
+
+func (w *World) SetArea(x1, y1, z1, x2, y2, z2 int, val bool) {
+  v := 0
+  if val {
+    v = w.max - 1
+  }
+  for x := x1; x <= x2; x++ {
+    for y := y1; y <= y2; y++ {
+      for z := z1; z <= z2; z++ {
+        w.locs[x][y][z].state = v
+        if val {
+          w.alive[loc{x, y, z}] = w.locs[x][y][z]
+        } else {
+          delete(w.alive, loc{x, y, z})
+        }
+      }
+    }
+  }
 }
 
 func (w *World) Update() {
@@ -69,13 +89,12 @@ func (w *World) Update() {
       for z, p := range row {
         l := loc{x, y, z}
         nearby := w.find_nearby(l)
-        alive := w.rule.Eval(p.state, nearby)
-        if p.state == 0 && alive {
-          new_locs[l] = 1
+        if p.state == 0 && w.born.True(nearby) { // dead, and is born
           w.alive[l] = p
-        } else if p.state != 0 && !alive {
-          new_locs[l] = 0
+          new_locs[l] = w.max
+        } else if p.state == 1 && !w.survives.True(nearby) { // alive, and does not survive
           delete(w.alive, l)
+          new_locs[l] = 0
         }
       }
     }
@@ -97,6 +116,9 @@ func (w *World) find_nearby(l loc) int {
       }
       for z := l.z - 1; z < l.z + 2; z++ {
         if z < 0 || z >= len(w.locs) {
+          continue
+        }
+        if x == l.x && y == l.y && z == l.z {
           continue
         }
         p := w.locs[x][y][z]
