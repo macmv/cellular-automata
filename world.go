@@ -2,7 +2,7 @@ package main
 
 import (
   "math/rand"
-  "github.com/macmv/simple-gl"
+  "github.com/macmv/simple-gl/core"
 
   "github.com/go-gl/mathgl/mgl32"
 )
@@ -18,14 +18,14 @@ type point struct {
 
 type World struct {
   size int
-  cube *gl.Model
+  cube *core.Model
   locs [][][]*point
   survives *Rule
   born *Rule
   max int
 }
 
-func NewWorld(size int, survives, born *Rule, max int) *World {
+func NewWorld(c core.Core, size int, survives, born *Rule, max int) *World {
   w := World{}
   w.size = size
   w.locs = [][][]*point{}
@@ -34,7 +34,7 @@ func NewWorld(size int, survives, born *Rule, max int) *World {
   w.max = max - 1
 
   scale := float32(1) / float32(size) * 3
-  w.cube = gl.NewCube(scale / 2, scale / 2, scale / 2)
+  w.cube = core.NewCube(c, scale / 2, scale / 2, scale / 2)
   for x := 0; x < size; x++ {
     slice := [][]*point{}
     for y := 0; y < size; y++ {
