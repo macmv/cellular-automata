@@ -5,8 +5,7 @@ go 1.15
 replace github.com/macmv/simple-gl v0.0.0 => /home/macmv/go/src/github.com/macmv/simple-gl
 
 require (
-	github.com/go-gl/example v0.0.0-20191129173604-c307114f3462 // indirect
-	github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7
 	github.com/go-gl/mathgl v1.0.0
 	github.com/macmv/simple-gl v0.0.0
+	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de
 )

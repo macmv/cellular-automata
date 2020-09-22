@@ -4,11 +4,12 @@ import (
   "net/http"
   _ "net/http/pprof"
 
+  gogl "golang.org/x/mobile/gl"
+
   "github.com/macmv/simple-gl"
   "github.com/macmv/simple-gl/core"
   "github.com/macmv/simple-gl/event"
 
-  gogl "github.com/go-gl/gl/v4.1-core/gl"
   "github.com/go-gl/mathgl/mgl32"
 )
 
@@ -26,11 +27,11 @@ func main() {
 
   world_trans := rot
 
-  var w World
+  var w *World
   var t core.Texture
-  var shader core.Shader
+  var shader *core.Shader
   gl.On(gl.START, func(c core.Core) {
-    w := NewWorld(
+    w = NewWorld(
       c,
       size,
       survives,
@@ -41,7 +42,7 @@ func main() {
     // defer window.Close()
 
     var err error
-    shader, err = c.NewShaderGeo("geometry.glsl", "vertex.glsl", "fragment.glsl")
+    shader, err = core.NewShader(c.Gl(), "vertex.glsl", "fragment.glsl")
     if err != nil {
       panic(err)
     }
@@ -49,7 +50,7 @@ func main() {
     shader.LoadPerspective(c.Window(), 0.1, 10)
     c.Window().Finish()
 
-    t = c.NewTexture3DFromData(100, 100, 100, w.TextureData())
+    t = c.NewTexture2DFromData(100, 100 * 100, w.TextureData())
   })
   i := 0
   step := 0
@@ -85,9 +86,9 @@ func main() {
 
     w.cube.Vao().Bind()
 
-    gogl.ActiveTexture(gogl.TEXTURE0)
+    c.Gl().ActiveTexture(gogl.TEXTURE0)
     t.Bind()
-    gogl.DrawElementsInstanced(gogl.TRIANGLES, w.cube.Vao().Length(), gogl.UNSIGNED_INT, nil, int32(size * size * size))
+    c.Gl().DrawElements(gogl.TRIANGLES, w.cube.Vao().Length(), gogl.UNSIGNED_INT, 0)
     w.cube.Vao().Unbind()
 
     w.cube.Transform = world_trans.Mul4(w.locs[0][0][0].trans)
